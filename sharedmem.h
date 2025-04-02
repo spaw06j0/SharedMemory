@@ -2,6 +2,7 @@
 
 #include <sys/mman.h>
 #include <string>
+
 struct InfImage {
     int width;
     int height;
@@ -37,15 +38,18 @@ struct SharedMemHeader {
 
 class SharedMem {
 public:
-    SharedMem();
+    SharedMem(const std::string &name);
+    SharedMem(const std::string &name, size_t size);
     ~SharedMem();
     bool Create();
     bool Open();
     void Close();
-
-    SharedMemHeader *getHeader() {return static_cast<SharedMemHeader*>(mem);}
+    bool Unlink();
+    
+    SharedMemHeader *getHeader() const {return static_cast<SharedMemHeader*>(mem);}
     unsigned char *getImageData() const;
     ObjInfo *getObjInfo() const;
+    InfImage GetImage() const;
 
     // cmd
     int getCmd() const;
@@ -53,12 +57,16 @@ public:
 
     bool setImage(const InfImage &img);
     bool setObjInfo(int objCount, ObjInfo *obj);
+    void clearImage();
+    void clearObjInfo();
 
 private:
     std::string shmName;
     size_t shmSize;
     void *mem;
-    
+    int shmid;
+    bool isOwner;
+
     // memory layout
     const size_t imgSize = 800 * 800 * 3;
     const size_t maxObjCount = 100;
